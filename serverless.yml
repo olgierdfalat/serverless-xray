@@ -1,0 +1,71 @@
+
+service: serverless-xray # NOTE: update this with your service name
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: eu-central-1
+  profile: serverless
+  stackName: sls-xray-stack
+  tracing: 
+    apiGateway: true
+    lambda: true    
+  
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+  iamRoleStatements:
+    - Effect: Allow # xray permissions (required)
+      Action:
+        - 'xray:PutTraceSegments'
+        - 'xray:PutTelemetryRecords'
+      Resource:
+        - "*"
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"       
+
+functions:
+  create:
+    handler: api.create
+    events:
+      - http:
+          method: post
+          path: create  
+          
+  process_stream:    
+    handler: stream.process
+    memorySize: 128
+    timeout: 60
+    events:
+      - stream:
+          type: dynamodb
+          batchSize: 100
+          enabled: true
+          arn: { "Fn::GetAtt": ["XrayDynamoDbTable", "StreamArn"] }          
+
+resources:
+  Resources:
+    XrayDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES        
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE} 

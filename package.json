@@ -1,0 +1,19 @@
+{
+  "name": "serverless-xray",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "serverless-plugin-tracing": "^2.0.0"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.456.0",
+    "aws-xray-sdk": "^2.3.3",
+    "uuid": "^3.3.2"
+  }
+}
