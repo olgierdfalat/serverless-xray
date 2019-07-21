@@ -1,5 +1,7 @@
 'use strict';
 const AWSXRay = require('aws-xray-sdk');
+AWSXRay.captureAWS(require('aws-sdk'));
+
 const parentTraceId = process.env._X_AMZN_TRACE_ID;
 
 module.exports.process = async (event, context, callback) => {

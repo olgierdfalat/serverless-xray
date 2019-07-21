@@ -58,5 +58,7 @@ typings/
 .env
 
 # next.js build output
-.history
 .next
+
+.history
+.serverless
